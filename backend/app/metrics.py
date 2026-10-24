@@ -170,14 +170,7 @@ _last_disk_sync = 0.0
 
 
 def sync_drift_from_disk():
-    """Sync latest drift report from ml/artifacts/drift_report.json if present."""
-    global _last_disk_sync
-    now = time.time()
-    # Cache for 5 seconds to avoid reading disk on high frequency scrapes
-    if now - _last_disk_sync < 5.0:
-        return
-    _last_disk_sync = now
-
+    """Fallback: Sync latest drift report from ml/artifacts/drift_report.json if present."""
     from .config import ARTIFACTS_DIR
     report_file = ARTIFACTS_DIR / "drift_report.json"
     if report_file.exists():
@@ -202,9 +195,71 @@ def sync_drift_from_disk():
             pass
 
 
-def get_metrics_response() -> Response:
-    """Generate Prometheus scrape response."""
+def sync_drift_live():
+    """
+    Computes real-time data drift metrics dynamically from MongoDB.
+    Compares live production ratings directly against active model metadata.
+    """
+    global _last_disk_sync
+    now = time.time()
+    if now - _last_disk_sync < 4.0:
+        return
+    _last_disk_sync = now
+
+    try:
+        from .database import get_db
+        from .config import ARTIFACTS_DIR
+        import json
+
+        # 1. Load active model metadata (baseline & known users)
+        baseline_mean = 3.52
+        known_users = set()
+        model_ver = "unknown"
+        meta_file = ARTIFACTS_DIR / "model_metadata.json"
+        if meta_file.exists():
+            with open(meta_file, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+                baseline_mean = float(meta.get("trainset_stats", {}).get("mean_rating", 3.52))
+                known_users = set(meta.get("known_user_ids", []))
+                model_ver = meta.get("model_version", "unknown")
+
+        # 2. Query MongoDB live ratings
+        db = get_db()
+        ratings = list(db.ratings.find({}, {"_id": 0, "userId": 1, "rating": 1}))
+        if ratings:
+            total = len(ratings)
+            mean_prod = sum(r["rating"] for r in ratings) / total
+
+            if known_users:
+                unseen_count = sum(1 for r in ratings if r.get("userId") not in known_users)
+                unseen_pct = round((unseen_count / total) * 100, 2)
+            else:
+                unseen_pct = 0.0
+
+            # Drift criteria:
+            # - Mean shift >= 0.50 stars OR
+            # - Unseen cold-start users >= 25.0%
+            mean_shift = abs(mean_prod - baseline_mean)
+            drift_detected = bool(mean_shift >= 0.50 or unseen_pct >= 25.0)
+
+            # Update Gauges dynamically
+            DATA_DRIFT_DETECTED.set(1 if drift_detected else 0)
+            DATA_DRIFT_UNSEEN_USERS_PCT.set(float(unseen_pct))
+            DATA_DRIFT_BASELINE_MEAN_RATING.set(round(float(baseline_mean), 2))
+            DATA_DRIFT_PRODUCTION_MEAN_RATING.set(round(float(mean_prod), 2))
+            LAST_DRIFT_CHECK_TIMESTAMP.set(now)
+            ACTIVE_MODEL_INFO.labels(model_version=model_ver, algorithm="SVD").set(1)
+            return
+    except Exception:
+        pass
+
+    # Fallback to disk report if available
     sync_drift_from_disk()
+
+
+def get_metrics_response() -> Response:
+    """Generate Prometheus scrape response with live real-time metrics."""
+    sync_drift_live()
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 

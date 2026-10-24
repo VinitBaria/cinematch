@@ -40,6 +40,9 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+    volumes:
+      - ./ml/artifacts:/app/ml/artifacts
+      - ./data:/app/data
     networks:
       - cinematch-network
 
