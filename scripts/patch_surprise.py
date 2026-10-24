@@ -4,15 +4,10 @@ even if Windows Defender or third-party antivirus blocks the .pyd binary.
 """
 
 import sys
+import site
 from pathlib import Path
 
-def patch():
-    try:
-        import surprise
-        surprise_dir = Path(surprise.__file__).parent
-        sim_py = surprise_dir / "similarities.py"
-        if not sim_py.exists():
-            sim_content = '''"""Fallback similarities module."""
+SIM_CONTENT = '''"""Fallback similarities module."""
 import math
 import numpy as np
 
@@ -123,9 +118,34 @@ def pearson_baseline(n_x, yr, min_support, global_mean, x_biases, y_biases, shri
             sim[xj, xi] = sim[xi, xj]
     return np.asarray(sim)
 '''
-            with open(sim_py, "w", encoding="utf-8") as f:
-                f.write(sim_content)
-            print("[PATCH] Applied pure-python surprise.similarities fallback")
+
+def patch():
+    try:
+        surprise_dirs = []
+        search_paths = list(sys.path)
+        try:
+            search_paths.extend(site.getsitepackages())
+        except Exception:
+            pass
+
+        for p in search_paths:
+            s_dir = Path(p) / "surprise"
+            if s_dir.exists() and s_dir.is_dir() and s_dir not in surprise_dirs:
+                surprise_dirs.append(s_dir)
+
+        if not surprise_dirs:
+            print("[PATCH] Surprise directory not found.")
+            return
+
+        for surprise_dir in surprise_dirs:
+            sim_py = surprise_dir / "similarities.py"
+            # Always ensure similarities.py exists
+            if not sim_py.exists():
+                with open(sim_py, "w", encoding="utf-8") as f:
+                    f.write(SIM_CONTENT)
+                print(f"[PATCH] Applied pure-python surprise.similarities fallback to {sim_py}")
+            else:
+                print(f"[PATCH] similarities.py already present in {surprise_dir}")
     except Exception as e:
         print(f"[PATCH] Notice: {e}")
 

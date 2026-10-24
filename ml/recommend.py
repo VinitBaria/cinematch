@@ -17,12 +17,21 @@ from typing import Optional
 # Fix Windows console encoding
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-
+import types
 import joblib
 import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+if "surprise.similarities" not in sys.modules:
+    try:
+        from scripts.patch_surprise import SIM_CONTENT
+        _sim_mod = types.ModuleType("surprise.similarities")
+        exec(SIM_CONTENT, _sim_mod.__dict__)
+        sys.modules["surprise.similarities"] = _sim_mod
+    except Exception:
+        pass
 
 from ml.config import (
     MODEL_PATH,
