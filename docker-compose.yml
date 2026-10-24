@@ -1,3 +1,5 @@
+name: cinematch-ai
+
 services:
   # ── 1. Database: MongoDB ──
   mongodb:

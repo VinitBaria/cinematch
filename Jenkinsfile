@@ -43,15 +43,15 @@ pipeline {
         stage('Build Docker Containers') {
             steps {
                 echo 'Building production Docker images via docker-compose...'
-                bat 'docker compose build backend frontend'
+                bat 'docker compose -p cinematch-ai build backend frontend'
             }
         }
 
         stage('Deploy (Continuous Deployment)') {
             steps {
                 echo 'Starting and updating container stack...'
-                bat 'docker compose up -d mongodb'
-                bat 'docker compose up -d --no-deps backend frontend nginx'
+                bat 'docker compose -p cinematch-ai up -d mongodb'
+                bat 'docker compose -p cinematch-ai up -d --no-deps backend frontend nginx'
             }
         }
 
