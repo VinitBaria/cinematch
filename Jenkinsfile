@@ -39,7 +39,7 @@ pipeline {
                 script {
                     try {
                         echo 'Building backend Docker image...'
-                        bat 'docker build -t cinematch-backend:latest ./backend'
+                        bat 'docker build -f backend/Dockerfile -t cinematch-backend:latest .'
                     } catch (Exception e) {
                         echo 'Docker build skipped or failed (Docker might not be running on host).'
                     }
