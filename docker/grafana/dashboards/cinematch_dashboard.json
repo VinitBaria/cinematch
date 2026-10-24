@@ -36,7 +36,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto"
+        "textMode": "name"
       },
       "pluginVersion": "10.0.0",
       "targets": [
@@ -44,10 +44,7 @@
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
           "expr": "cinematch_active_model_info",
-          "format": "table",
-          "instant": true,
           "legendFormat": "{{model_version}} ({{algorithm}})",
-          "range": false,
           "refId": "A"
         }
       ],
@@ -67,7 +64,7 @@
               { "color": "green", "value": 10 }
             ]
           },
-          "unit": "reqps"
+          "unit": "short"
         }
       },
       "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
@@ -85,13 +82,13 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
-          "expr": "sum(rate(cinematch_http_requests_total[1m]))",
-          "legendFormat": "Req/sec",
+          "expr": "sum(cinematch_http_requests_total)",
+          "legendFormat": "Requests",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "API Request Rate",
+      "title": "Total API Requests Processed",
       "type": "stat"
     },
     {
@@ -126,7 +123,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum(rate(cinematch_model_inference_seconds_bucket[5m])) by (le)) or histogram_quantile(0.95, sum(cinematch_model_inference_seconds_bucket) by (le))",
+          "expr": "(histogram_quantile(0.95, sum(rate(cinematch_model_inference_seconds_bucket[5m])) by (le)) > 0) or histogram_quantile(0.95, sum(cinematch_model_inference_seconds_bucket) by (le))",
           "legendFormat": "p95 SVD Latency",
           "range": true,
           "refId": "A"
@@ -195,7 +192,7 @@
             "lineWidth": 2,
             "pointSize": 5,
             "showPoints": "auto",
-            "spanNulls": false
+            "spanNulls": true
           },
           "unit": "s"
         }
@@ -211,14 +208,14 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum(rate(cinematch_model_inference_seconds_bucket[2m])) by (le))",
+          "expr": "(histogram_quantile(0.95, sum(rate(cinematch_model_inference_seconds_bucket[5m])) by (le)) > 0) or histogram_quantile(0.95, sum(cinematch_model_inference_seconds_bucket) by (le))",
           "legendFormat": "p95 Latency",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.50, sum(rate(cinematch_model_inference_seconds_bucket[2m])) by (le))",
+          "expr": "(histogram_quantile(0.50, sum(rate(cinematch_model_inference_seconds_bucket[5m])) by (le)) > 0) or histogram_quantile(0.50, sum(cinematch_model_inference_seconds_bucket) by (le))",
           "legendFormat": "p50 (Median) Latency",
           "refId": "B"
         }
@@ -273,7 +270,8 @@
             "fillOpacity": 15,
             "lineWidth": 1,
             "pointSize": 5,
-            "showPoints": "never"
+            "showPoints": "never",
+            "spanNulls": true
           },
           "unit": "s"
         }
@@ -289,7 +287,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum(rate(cinematch_http_request_duration_seconds_bucket[2m])) by (le, endpoint))",
+          "expr": "(histogram_quantile(0.95, sum(rate(cinematch_http_request_duration_seconds_bucket[5m])) by (le, endpoint)) > 0) or histogram_quantile(0.95, sum(cinematch_http_request_duration_seconds_bucket) by (le, endpoint))",
           "legendFormat": "{{endpoint}} (p95)",
           "refId": "A"
         }
@@ -324,7 +322,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
-          "expr": "sum by (status, endpoint) (rate(cinematch_http_requests_total[2m]))",
+          "expr": "sum by (status, endpoint) (rate(cinematch_http_requests_total[5m]))",
           "legendFormat": "{{status}} - {{endpoint}}",
           "refId": "A"
         }
@@ -342,5 +340,5 @@
   "timezone": "browser",
   "title": "CineMatch AI - MLOps & Recommendation Dashboard",
   "uid": "cinematch-ai-mlops",
-  "version": 1
+  "version": 2
 }

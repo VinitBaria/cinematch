@@ -6,7 +6,7 @@ scrape_configs:
   - job_name: "cinematch_backend"
     metrics_path: "/metrics"
     static_configs:
-      - targets: ["host.docker.internal:8000"]
+      - targets: ["backend:8000", "host.docker.internal:8000"]
         labels:
           app: "cinematch-ai"
           env: "development"
