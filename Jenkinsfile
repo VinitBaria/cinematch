@@ -39,15 +39,15 @@ pipeline {
             }
         }
 
-        // ── Continuous Deployment (CD) Stages ──
-        stage('Build Docker Containers') {
+        // ── Deployment Stages ──
+        stage('Build Docker') {
             steps {
                 echo 'Building production Docker images via docker-compose...'
                 bat 'docker compose -p cinematch-ai build backend frontend'
             }
         }
 
-        stage('Deploy (Continuous Deployment)') {
+        stage('Deploy') {
             steps {
                 echo 'Starting and updating container stack...'
                 bat 'docker compose -p cinematch-ai up -d mongodb'
@@ -55,10 +55,11 @@ pipeline {
             }
         }
 
-        stage('Smoke Test (Verify Live App)') {
+        stage('Smoke Test') {
             steps {
                 echo 'Verifying live application health...'
-                bat 'timeout /t 5 /nobreak && curl.exe -f http://127.0.0.1/api/health'
+                sleep 5
+                bat 'curl.exe -f http://127.0.0.1/api/health'
             }
         }
     }
