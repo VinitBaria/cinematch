@@ -57,6 +57,7 @@ ACTIVE_MODEL_INFO = Gauge(
 )
 
 # ──────────────────────────────────────────────
+# ──────────────────────────────────────────────
 # 3. User Feedback & Business Metrics
 # ──────────────────────────────────────────────
 RATINGS_SUBMITTED_TOTAL = Counter(
@@ -65,9 +66,145 @@ RATINGS_SUBMITTED_TOTAL = Counter(
     ["rating"],  # 0.5 to 5.0
 )
 
+# ──────────────────────────────────────────────
+# 4. Data Drift & Model Governance Metrics
+# ──────────────────────────────────────────────
+DATA_DRIFT_DETECTED = Gauge(
+    "cinematch_data_drift_detected",
+    "Whether data drift is detected (0 = Stable, 1 = Drift Alert - Retrain Needed)",
+)
+
+DATA_DRIFT_KS_P_VALUE = Gauge(
+    "cinematch_drift_ks_p_value",
+    "Kolmogorov-Smirnov test p-value between training and live ratings (<0.05 indicates drift)",
+)
+
+DATA_DRIFT_KS_STATISTIC = Gauge(
+    "cinematch_drift_ks_statistic",
+    "Kolmogorov-Smirnov test maximum distance D-statistic",
+)
+
+DATA_DRIFT_PSI_SCORE = Gauge(
+    "cinematch_drift_psi_score",
+    "Population Stability Index for rating distribution shift (>0.20 indicates drift)",
+)
+
+DATA_DRIFT_UNSEEN_USERS_PCT = Gauge(
+    "cinematch_drift_unseen_users_pct",
+    "Percentage of live ratings from users not in the trained SVD matrix",
+)
+
+DATA_DRIFT_BASELINE_MEAN_RATING = Gauge(
+    "cinematch_drift_baseline_mean_rating",
+    "Mean rating in the baseline training dataset",
+)
+
+DATA_DRIFT_PRODUCTION_MEAN_RATING = Gauge(
+    "cinematch_drift_production_mean_rating",
+    "Mean rating in the live production database",
+)
+
+DATA_DRIFT_RATING_DISTRIBUTION = Gauge(
+    "cinematch_drift_rating_distribution",
+    "Proportion of ratings for each star score across datasets",
+    ["dataset", "rating"],  # dataset: baseline, production; rating: 0.5 to 5.0
+)
+
+LAST_DRIFT_CHECK_TIMESTAMP = Gauge(
+    "cinematch_last_drift_check_timestamp",
+    "Unix timestamp of the most recent data drift evaluation",
+)
+
+# Pre-initialize labeled metrics so Prometheus scrapers immediately see valid series with zero defaults
+ACTIVE_MODEL_INFO.labels(model_version="v1.0.0", algorithm="SVD").set(1)
+MODEL_INFERENCE_SECONDS.labels(model_version="v1.0.0", user_type="known")
+MODEL_INFERENCE_SECONDS.labels(model_version="v1.0.0", user_type="cold_start")
+RECOMMENDATION_REQUESTS_TOTAL.labels(strategy="svd_collaborative_filtering", status="success")
+RECOMMENDATION_REQUESTS_TOTAL.labels(strategy="popularity_bayesian_weighted", status="success")
+RECOMMENDATION_REQUESTS_TOTAL.labels(strategy="genre_personalized_hybrid", status="success")
+for _r in [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]:
+    RATINGS_SUBMITTED_TOTAL.labels(rating=str(_r))
+    DATA_DRIFT_RATING_DISTRIBUTION.labels(dataset="baseline", rating=str(_r)).set(0.1)
+    DATA_DRIFT_RATING_DISTRIBUTION.labels(dataset="production", rating=str(_r)).set(0.1)
+
+DATA_DRIFT_DETECTED.set(0)
+DATA_DRIFT_KS_P_VALUE.set(1.0)
+DATA_DRIFT_KS_STATISTIC.set(0.0)
+DATA_DRIFT_PSI_SCORE.set(0.0)
+DATA_DRIFT_UNSEEN_USERS_PCT.set(0.0)
+DATA_DRIFT_BASELINE_MEAN_RATING.set(3.53)
+DATA_DRIFT_PRODUCTION_MEAN_RATING.set(3.53)
+LAST_DRIFT_CHECK_TIMESTAMP.set(time.time())
+
+
+def update_drift_metrics(
+    drift_detected: bool,
+    ks_p_value: float,
+    ks_statistic: float,
+    psi_score: float,
+    unseen_users_pct: float,
+    baseline_mean: float,
+    production_mean: float,
+    baseline_dist: dict = None,
+    production_dist: dict = None,
+):
+    """Update all Prometheus drift metrics with the latest calculation results."""
+    DATA_DRIFT_DETECTED.set(1 if drift_detected else 0)
+    DATA_DRIFT_KS_P_VALUE.set(float(ks_p_value))
+    DATA_DRIFT_KS_STATISTIC.set(float(ks_statistic))
+    DATA_DRIFT_PSI_SCORE.set(float(psi_score))
+    DATA_DRIFT_UNSEEN_USERS_PCT.set(float(unseen_users_pct))
+    DATA_DRIFT_BASELINE_MEAN_RATING.set(float(baseline_mean))
+    DATA_DRIFT_PRODUCTION_MEAN_RATING.set(float(production_mean))
+    LAST_DRIFT_CHECK_TIMESTAMP.set(time.time())
+
+    if baseline_dist:
+        for r, val in baseline_dist.items():
+            DATA_DRIFT_RATING_DISTRIBUTION.labels(dataset="baseline", rating=str(r)).set(float(val))
+    if production_dist:
+        for r, val in production_dist.items():
+            DATA_DRIFT_RATING_DISTRIBUTION.labels(dataset="production", rating=str(r)).set(float(val))
+
+
+_last_disk_sync = 0.0
+
+
+def sync_drift_from_disk():
+    """Sync latest drift report from ml/artifacts/drift_report.json if present."""
+    global _last_disk_sync
+    now = time.time()
+    # Cache for 5 seconds to avoid reading disk on high frequency scrapes
+    if now - _last_disk_sync < 5.0:
+        return
+    _last_disk_sync = now
+
+    from .config import ARTIFACTS_DIR
+    report_file = ARTIFACTS_DIR / "drift_report.json"
+    if report_file.exists():
+        try:
+            import json
+            with open(report_file, "r") as f:
+                data = json.load(f)
+            stats_data = data.get("statistics", {})
+            dists = data.get("distributions", {})
+            update_drift_metrics(
+                drift_detected=data.get("drift_detected", False),
+                ks_p_value=stats_data.get("ks_p_value", 1.0),
+                ks_statistic=stats_data.get("ks_statistic", 0.0),
+                psi_score=stats_data.get("psi_score", 0.0),
+                unseen_users_pct=stats_data.get("unseen_users_pct", 0.0),
+                baseline_mean=stats_data.get("baseline_mean", 3.53),
+                production_mean=stats_data.get("production_mean", 3.53),
+                baseline_dist=dists.get("baseline"),
+                production_dist=dists.get("production"),
+            )
+        except Exception:
+            pass
+
 
 def get_metrics_response() -> Response:
     """Generate Prometheus scrape response."""
+    sync_drift_from_disk()
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 

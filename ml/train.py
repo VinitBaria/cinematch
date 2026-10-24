@@ -14,12 +14,26 @@ from datetime import datetime, timezone
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
+import types
+from pathlib import Path
+
+# Add project root to sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+# Python 3.13 / Windows similarities patch
+if "surprise.similarities" not in sys.modules:
+    try:
+        from scripts.patch_surprise import SIM_CONTENT
+        _sim_mod = types.ModuleType("surprise.similarities")
+        exec(SIM_CONTENT, _sim_mod.__dict__)
+        sys.modules["surprise.similarities"] = _sim_mod
+    except Exception:
+        pass
+
 import joblib
 import mlflow
 import pandas as pd
 from surprise import SVD, Dataset, Reader
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from ml.config import (
     TRAIN_DATA_PATH,

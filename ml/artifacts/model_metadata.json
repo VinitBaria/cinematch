@@ -1,5 +1,5 @@
 {
-  "model_version": "v1.0.0",
+  "model_version": "v20261024_162631",
   "algorithm": "SVD",
   "library": "scikit-surprise",
   "parameters": {
@@ -9,12 +9,12 @@
     "reg_all": 0.02,
     "random_state": 42
   },
-  "training_time_seconds": 0.36,
+  "training_time_seconds": 0.51,
   "trainset_stats": {
-    "n_users": 610,
-    "n_items": 7526,
-    "n_ratings": 70312,
-    "global_mean": 3.521412
+    "n_users": 653,
+    "n_items": 7527,
+    "n_ratings": 70434,
+    "global_mean": 3.518713
   },
   "known_user_ids": [
     1,
@@ -626,7 +626,50 @@
     607,
     608,
     609,
-    610
+    610,
+    9001,
+    9002,
+    9003,
+    9005,
+    9006,
+    9007,
+    9008,
+    9010,
+    9011,
+    9012,
+    9013,
+    9014,
+    9016,
+    9017,
+    9019,
+    9020,
+    9022,
+    9023,
+    9024,
+    9025,
+    9026,
+    9027,
+    9028,
+    9029,
+    9030,
+    9032,
+    9033,
+    9034,
+    9035,
+    9036,
+    9037,
+    9038,
+    9040,
+    9042,
+    9043,
+    9044,
+    9045,
+    9046,
+    9047,
+    9048,
+    9049,
+    1000000,
+    1000001
   ],
   "known_movie_ids": [
     1,
@@ -665,6 +708,7 @@
     36,
     38,
     39,
+    40,
     41,
     42,
     43,
@@ -8162,7 +8206,7 @@
     5.0
   ],
   "random_seed": 42,
-  "trained_at": "2026-10-24T05:28:41.890927+00:00",
+  "trained_at": "2026-10-24T16:26:32.185242+00:00",
   "artifact_path": "C:\\Users\\vinit baria\\OneDrive\\Desktop\\MLops_new\\cinematch-ai\\ml\\artifacts\\svd_model.joblib",
-  "mlflow_run_id": "16a3601b40024ad69c384c3461cc4862"
+  "mlflow_run_id": "c735b0413d6146858a6df818a3329b84"
 }

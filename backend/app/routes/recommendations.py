@@ -168,6 +168,7 @@ def get_my_recommendations(
     limit: int = Query(10, ge=1, le=50),
     current_user=Depends(get_optional_current_user),
 ):
+    t_start = time.time()
     db = get_db()
     user_id = current_user["userId"] if current_user else 0
 
@@ -355,6 +356,14 @@ def get_my_recommendations(
     # Record Prometheus metrics
     RECOMMENDATION_REQUESTS_TOTAL.labels(strategy=strategy, status="success").inc()
     RECOMMENDED_ITEMS_COUNT.labels(strategy=strategy).observe(len(items))
+
+    infer_duration = max(0.001, time.time() - t_start)
+    user_type = "known" if (recommender and recommender.is_known_user(user_id)) else "cold_start"
+    model_ver = str(recommender.model_version or "v1.0.0") if recommender else "v1.0.0"
+    MODEL_INFERENCE_SECONDS.labels(
+        model_version=model_ver,
+        user_type=user_type,
+    ).observe(infer_duration)
 
     return RecommendationResponse(
         recommendations=items,

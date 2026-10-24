@@ -5,7 +5,9 @@ import time
 import json
 from contextlib import asynccontextmanager
 from pathlib import Path
-from fastapi import FastAPI, Request, status
+import subprocess
+import sys
+from fastapi import FastAPI, Request, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -40,6 +42,13 @@ async def lifespan(app: FastAPI):
             print("[ML] SVD Model not yet loaded or not found")
     except Exception as e:
         print(f"[WARN] Error loading ML model at startup: {e}")
+
+    try:
+        # Pre-warm Data Drift status
+        from .metrics import sync_drift_from_disk
+        sync_drift_from_disk()
+    except Exception as e:
+        print(f"[WARN] Could not initialize drift metrics at startup: {e}")
 
     yield
 
@@ -153,6 +162,56 @@ def get_model_info():
         knownUsers=len(recommender.known_user_ids) if recommender else meta.get("known_users_count", 0),
         knownMovies=len(recommender.known_movie_ids) if recommender else meta.get("known_movies_count", 0),
     )
+
+
+@app.get("/api/model/drift-status", tags=["Model Governance"])
+def get_drift_status():
+    """Retrieve current data drift audit summary and statistics."""
+    report_file = ARTIFACTS_DIR / "drift_report.json"
+    if not report_file.exists():
+        # Fallback to status file or run check
+        status_file = ARTIFACTS_DIR / "drift_status.json"
+        if status_file.exists():
+            with open(status_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return {"status": "no_audit_recorded", "message": "Run drift check first."}
+
+    with open(report_file, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+@app.post("/api/model/check-drift", tags=["Model Governance"])
+def trigger_drift_check(simulate: bool = False):
+    """Trigger a live statistical data drift analysis against MongoDB ratings."""
+    try:
+        from ml.drift_detector import run_drift_analysis
+        report = run_drift_analysis(simulate=simulate)
+        return report
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"error": str(e), "message": "Failed to run data drift audit."},
+        )
+
+
+def _run_background_retrain():
+    """Background task to execute check_drift_and_retrain pipeline."""
+    script_path = Path(__file__).resolve().parent.parent.parent / "scripts" / "check_drift_and_retrain.py"
+    subprocess.run([sys.executable, str(script_path), "--force-retrain"])
+
+
+@app.post("/api/model/retrain", tags=["Model Governance"])
+def trigger_retraining_webhook(background_tasks: BackgroundTasks):
+    """
+    Webhook endpoint for Grafana, Jenkins, or Admin to trigger model retraining.
+    Runs asynchronously in the background and returns HTTP 200 immediately.
+    """
+    background_tasks.add_task(_run_background_retrain)
+    return {
+        "status": "triggered",
+        "timestamp": time.time(),
+        "message": "Continuous Training pipeline initiated in background."
+    }
 
 
 if __name__ == "__main__":

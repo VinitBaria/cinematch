@@ -7,6 +7,7 @@ import {
   AnyMovie,
   displayTitle,
   displayYear,
+  getMoviePoster,
   isRecommendation,
   matchPercent,
 } from '../utils/movie';
@@ -119,16 +120,15 @@ export const MovieModal: React.FC<MovieModalProps> = ({
 
         {/* Header */}
         <div className="relative h-[300px] w-full overflow-hidden bg-black sm:h-[400px]">
-          {movie.posterUrl ? (
-            <img
-              src={movie.posterUrl}
-              alt=""
-              referrerPolicy="no-referrer"
-              className="absolute inset-0 h-full w-full scale-125 object-cover object-top blur-2xl saturate-150 brightness-[0.55] animate-kenburns"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-red-950 via-zinc-900 to-black" />
-          )}
+          <img
+            src={movie.posterUrl || getMoviePoster(movie)}
+            alt=""
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = getMoviePoster(movie);
+            }}
+            className="absolute inset-0 h-full w-full scale-125 object-cover object-top blur-2xl saturate-150 brightness-[0.55] animate-kenburns"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-[#181818]/30 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#181818]/80 via-transparent to-transparent" />
 

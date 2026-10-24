@@ -1,0 +1,10 @@
+{
+  "drift_detected": true,
+  "timestamp": "2026-10-24T16:29:15.386176+00:00",
+  "model_version": "v20261024_162631",
+  "ks_p_value": 0.0,
+  "psi_score": 1.16246,
+  "unseen_users_pct": 4.43,
+  "baseline_mean": 3.519,
+  "production_mean": 2.805
+}

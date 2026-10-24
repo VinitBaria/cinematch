@@ -31,6 +31,13 @@ pipeline {
             }
         }
 
+        stage('Check Data Drift & Auto-Retrain') {
+            steps {
+                echo 'Evaluating production data drift and retraining if necessary...'
+                bat 'python scripts/check_drift_and_retrain.py'
+            }
+        }
+
         stage('Run Tests') {
             steps {
                 echo 'Running unit and integration tests...'

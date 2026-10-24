@@ -27,21 +27,21 @@ GENRE_FALLBACK_POSTERS = {
 }
 
 KNOWN_POSTER_MAP = {
-    "jawan": "https://image.tmdb.org/t/p/w500/jRtL02e5k4h1XGZ5d7N3C5s4Rk.jpg",
-    "rrr": "https://image.tmdb.org/t/p/w500/nEufeZlyAOLqO2brrs0yeMu1Qje.jpg",
-    "pathaan": "https://image.tmdb.org/t/p/w500/m1b9toNW4UsH14g8O5nneW2g09e.jpg",
-    "animal": "https://image.tmdb.org/t/p/w500/hr2qmC352zQ4QkX5m7Y1fX8B6.jpg",
-    "stree 2": "https://image.tmdb.org/t/p/w500/uXygyfSTtKqL7QYlG2bN7D9c.jpg",
-    "dangal": "https://image.tmdb.org/t/p/w500/5kqq42aB6s4Qf5E2Y1x6nC3m2b.jpg",
-    "3 idiots": "https://image.tmdb.org/t/p/w500/66A9MqXOyVFCssoloscw79z8Tew.jpg",
-    "oppenheimer": "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-    "dune: part two": "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
-    "dune 2": "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
-    "interstellar": "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-    "inception": "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
-    "the dark knight": "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-    "deadpool & wolverine": "https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
-    "avatar: the way of water": "https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg",
+    "jawan": "/posters/jawan.jpg",
+    "rrr": "/posters/rrr.jpg",
+    "pathaan": "/posters/pathaan.jpg",
+    "animal": "/posters/animal.jpg",
+    "stree 2": "/posters/stree2.jpg",
+    "12th fail": "/posters/12th_fail.jpg",
+    "dangal": "/posters/dangal.jpg",
+    "3 idiots": "/posters/3_idiots.jpg",
+    "oppenheimer": "/posters/oppenheimer.jpg",
+    "dune: part two": "/posters/dune2.jpg",
+    "dune 2": "/posters/dune2.jpg",
+    "interstellar": "/posters/interstellar.jpg",
+    "the dark knight": "/posters/the_dark_knight.jpg",
+    "deadpool & wolverine": "/posters/deadpool_wolverine.jpg",
+    "avatar: the way of water": "/posters/avatar2.jpg",
 }
 
 

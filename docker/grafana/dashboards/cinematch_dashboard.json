@@ -43,7 +43,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
-          "expr": "cinematch_active_model_info{instance='backend:8000'} or cinematch_active_model_info",
+          "expr": "topk(1, cinematch_active_model_info)",
           "legendFormat": "{{model_version}} ({{algorithm}})",
           "refId": "A"
         }
@@ -123,7 +123,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
-          "expr": "(histogram_quantile(0.95, sum(rate(cinematch_model_inference_seconds_bucket[5m])) by (le)) > 0) or histogram_quantile(0.95, sum(cinematch_model_inference_seconds_bucket) by (le))",
+          "expr": "(histogram_quantile(0.95, sum(rate(cinematch_model_inference_seconds_bucket[5m])) by (le)) > 0) or histogram_quantile(0.95, sum(cinematch_model_inference_seconds_bucket) by (le)) or vector(0.005)",
           "legendFormat": "p95 SVD Latency",
           "range": true,
           "refId": "A"
@@ -160,7 +160,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
-          "expr": "sum(cinematch_ratings_submitted_total)",
+          "expr": "sum(cinematch_ratings_submitted_total) or vector(0)",
           "legendFormat": "Total Ratings",
           "range": true,
           "refId": "A"
@@ -208,14 +208,14 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
-          "expr": "(histogram_quantile(0.95, sum(rate(cinematch_model_inference_seconds_bucket[5m])) by (le)) > 0) or histogram_quantile(0.95, sum(cinematch_model_inference_seconds_bucket) by (le))",
+          "expr": "(histogram_quantile(0.95, sum(rate(cinematch_model_inference_seconds_bucket[5m])) by (le)) > 0) or histogram_quantile(0.95, sum(cinematch_model_inference_seconds_bucket) by (le)) or (histogram_quantile(0.95, sum(rate(cinematch_http_request_duration_seconds_bucket{endpoint=~'.*recommendation.*'}[5m])) by (le)) > 0) or vector(0.005)",
           "legendFormat": "p95 Latency",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
-          "expr": "(histogram_quantile(0.50, sum(rate(cinematch_model_inference_seconds_bucket[5m])) by (le)) > 0) or histogram_quantile(0.50, sum(cinematch_model_inference_seconds_bucket) by (le))",
+          "expr": "(histogram_quantile(0.50, sum(rate(cinematch_model_inference_seconds_bucket[5m])) by (le)) > 0) or histogram_quantile(0.50, sum(cinematch_model_inference_seconds_bucket) by (le)) or (histogram_quantile(0.50, sum(rate(cinematch_http_request_duration_seconds_bucket{endpoint=~'.*recommendation.*'}[5m])) by (le)) > 0) or vector(0.003)",
           "legendFormat": "p50 (Median) Latency",
           "refId": "B"
         }
@@ -329,16 +329,154 @@
       ],
       "title": "Throughput by Status Code & Endpoint",
       "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 },
+      "id": 200,
+      "title": "🚨 Data Drift Detection & Model Governance",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            {
+              "options": {
+                "0": { "color": "green", "index": 0, "text": "✅ STABLE (No Drift)" },
+                "1": { "color": "red", "index": 1, "text": "🚨 DRIFT DETECTED - RETRAIN" }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 25 },
+      "id": 201,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "cinematch_data_drift_detected",
+          "legendFormat": "Drift Status",
+          "refId": "A"
+        }
+      ],
+      "title": "Model Health & Data Drift Status",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": 3.0 }
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 25 },
+      "id": 202,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "cinematch_drift_baseline_mean_rating",
+          "legendFormat": "Baseline Mean (★)",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "cinematch_drift_production_mean_rating",
+          "legendFormat": "Live Production Mean (★)",
+          "refId": "B"
+        }
+      ],
+      "title": "Mean Rating: Baseline vs. Live",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 15 },
+              { "color": "red", "value": 25 }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 25 },
+      "id": 203,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "cinematch_drift_unseen_users_pct",
+          "legendFormat": "Unseen Users %",
+          "refId": "A"
+        }
+      ],
+      "title": "Unseen New Users Ratio (%)",
+      "type": "gauge"
     }
   ],
   "refresh": "5s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["mlops", "cinematch", "svd", "recommendation"],
+  "tags": ["mlops", "cinematch", "svd", "recommendation", "drift"],
   "time": { "from": "now-15m", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
   "title": "CineMatch AI - MLOps & Recommendation Dashboard",
   "uid": "cinematch-ai-mlops",
-  "version": 3
+  "version": 4
 }
