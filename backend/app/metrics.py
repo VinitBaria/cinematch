@@ -236,11 +236,12 @@ def sync_drift_live():
             else:
                 unseen_pct = 0.0
 
-            # Drift criteria:
-            # - Mean shift >= 0.50 stars OR
-            # - Unseen cold-start users >= 25.0%
-            mean_shift = abs(mean_prod - baseline_mean)
-            drift_detected = bool(mean_shift >= 0.50 or unseen_pct >= 25.0)
+            # If all live users are already calibrated into the trained model:
+            if unseen_pct == 0.0:
+                drift_detected = False
+            else:
+                mean_shift = abs(mean_prod - baseline_mean)
+                drift_detected = bool(mean_shift >= 0.50 or unseen_pct >= 25.0)
 
             # Update Gauges dynamically
             DATA_DRIFT_DETECTED.set(1 if drift_detected else 0)

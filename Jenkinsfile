@@ -1,6 +1,12 @@
 pipeline {
     agent any
 
+    triggers {
+        // Automatically check GitHub for updates every 15 mins and run periodic drift evaluation
+        pollSCM('H/15 * * * *')
+        cron('H/30 * * * *')
+    }
+
     environment {
         NOTIFY_EMAIL = 'vinitbaria2006@gmail.com'
     }

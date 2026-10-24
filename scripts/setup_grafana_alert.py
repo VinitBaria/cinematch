@@ -154,14 +154,17 @@ def setup_grafana_alerting():
     policy_resp = requests.get(f"{GRAFANA_URL}/api/v1/provisioning/policies", auth=AUTH)
     if policy_resp.status_code == 200:
         policy = policy_resp.json()
-        policy["receiver"] = "Jenkins-Retrain-Webhook."
+        policy["receiver"] = "Jenkins-Retrain-Webhook"
+        policy["group_wait"] = "5s"
+        policy["group_interval"] = "15s"
+        policy["repeat_interval"] = "2m"
         pol_res = requests.put(
             f"{GRAFANA_URL}/api/v1/provisioning/policies",
             auth=AUTH,
             headers=HEADERS,
             data=json.dumps(policy),
         )
-        print(f"🎯 Default notification policy set to 'Jenkins-Retrain-Webhook.': {pol_res.status_code}")
+        print(f"🎯 Default notification policy set to 'Jenkins-Retrain-Webhook': {pol_res.status_code}")
 
     print("\n🎉 Done! The alert rule and webhook are fully provisioned and active.")
 
