@@ -58,7 +58,7 @@ pipeline {
         stage('Smoke Test (Verify Live App)') {
             steps {
                 echo 'Verifying live application health...'
-                bat 'powershell -Command "Start-Sleep -Seconds 5; curl -f http://localhost/api/health"'
+                bat 'timeout /t 5 /nobreak && curl.exe -f http://127.0.0.1/api/health'
             }
         }
     }
