@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // Update this to your notification recipient email
-        NOTIFY_EMAIL = 'your-email@gmail.com'
+        NOTIFY_EMAIL = 'vinitbaria2006@gmail.com'
     }
 
     stages {
