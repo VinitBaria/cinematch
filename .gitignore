@@ -12,15 +12,11 @@ venv/
 env/
 .venv/
 
-# ML Artifacts
-ml/artifacts/*.pkl
-ml/artifacts/*.joblib
-ml/artifacts/*.json
-ml/artifacts/*.csv
+# ML Artifacts (tracked for CI/CD model inference)
+# ml/artifacts/*.pkl
 
 # Data
 data/raw/
-data/processed/
 *.zip
 
 # Environment

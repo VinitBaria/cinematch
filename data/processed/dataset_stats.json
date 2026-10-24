@@ -1,0 +1,40 @@
+{
+  "total_ratings": 100836,
+  "total_users": 610,
+  "total_movies": 9724,
+  "total_movies_catalog": 9742,
+  "rating_range": [
+    0.5,
+    5.0
+  ],
+  "mean_rating": 3.501556983616962,
+  "median_rating": 3.5,
+  "std_rating": 1.042529239060635,
+  "sparsity": 0.9830003169443864,
+  "ratings_per_user": {
+    "mean": 165.30491803278687,
+    "median": 70.5,
+    "min": 20,
+    "max": 2698
+  },
+  "ratings_per_movie": {
+    "mean": 10.369806663924312,
+    "median": 3.0,
+    "min": 1,
+    "max": 329
+  },
+  "splits": {
+    "train": 70312,
+    "validation": 15102,
+    "test": 15422
+  },
+  "timestamp_range": {
+    "min": 828124615,
+    "max": 1537799250,
+    "min_date": "1996-03-29T18:36:55+00:00",
+    "max_date": "2018-09-24T14:27:30+00:00"
+  },
+  "app_user_id_offset": 1000000,
+  "max_movielens_user_id": 610,
+  "processed_at": "2026-10-23T17:08:28.572622+00:00"
+}

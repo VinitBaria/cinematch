@@ -1,0 +1,21 @@
+{
+  "model_version": "v20261024_051828",
+  "evaluation_set": "test",
+  "prediction_metrics": {
+    "rmse": 0.9141372238329121,
+    "mae": 0.7069319349903272,
+    "n_predictions": 15422
+  },
+  "ranking_metrics": {
+    "precision_at_10": 0.5117747440273038,
+    "recall_at_10": 0.733350865729545,
+    "ndcg_at_10": 0.7844932661984532,
+    "users_evaluated": 586,
+    "relevance_threshold": 4.0,
+    "k": 10,
+    "note": "Ranking metrics are computed over each user's test-set items only, not over all catalog items. No negative sampling is used. This means Precision@K and Recall@K reflect the model's ability to rank truly-relevant test items higher, among a typically small candidate set. Values are not directly comparable to full-catalog metrics."
+  },
+  "evaluation_time_seconds": 2.44,
+  "random_seed": 42,
+  "evaluated_at": "2026-10-24T05:18:43.246010+00:00"
+}
