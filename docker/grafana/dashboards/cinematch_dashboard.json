@@ -43,7 +43,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
-          "expr": "cinematch_active_model_info",
+          "expr": "cinematch_active_model_info{instance='backend:8000'} or cinematch_active_model_info",
           "legendFormat": "{{model_version}} ({{algorithm}})",
           "refId": "A"
         }
@@ -340,5 +340,5 @@
   "timezone": "browser",
   "title": "CineMatch AI - MLOps & Recommendation Dashboard",
   "uid": "cinematch-ai-mlops",
-  "version": 2
+  "version": 3
 }

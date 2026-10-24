@@ -1,5 +1,5 @@
 {
-  "model_version": "v20261024_052841",
+  "model_version": "v1.0.0",
   "algorithm": "SVD",
   "library": "scikit-surprise",
   "parameters": {
