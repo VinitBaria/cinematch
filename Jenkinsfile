@@ -21,7 +21,9 @@ pipeline {
             steps {
                 echo 'Installing Python dependencies...'
                 bat 'python -m pip install --upgrade pip'
-                bat 'pip install -r backend/requirements.txt pytest'
+                bat 'pip install email-validator pytest'
+                bat 'pip install -r backend/requirements.txt'
+                bat 'pip install -r ml/requirements.txt'
             }
         }
 
