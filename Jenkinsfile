@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        // Update this to your notification recipient email
+        NOTIFY_EMAIL = 'your-email@gmail.com'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -34,16 +39,26 @@ pipeline {
             }
         }
 
-        stage('Docker Build (Optional)') {
+        // ── Continuous Deployment (CD) Stages ──
+        stage('Build Docker Containers') {
             steps {
-                script {
-                    try {
-                        echo 'Building backend Docker image...'
-                        bat 'docker build -f backend/Dockerfile -t cinematch-backend:latest .'
-                    } catch (Exception e) {
-                        echo 'Docker build skipped or failed (Docker might not be running on host).'
-                    }
-                }
+                echo 'Building production Docker images via docker-compose...'
+                bat 'docker compose build backend frontend'
+            }
+        }
+
+        stage('Deploy (Continuous Deployment)') {
+            steps {
+                echo 'Starting and updating container stack...'
+                bat 'docker compose up -d mongodb'
+                bat 'docker compose up -d --no-deps backend frontend nginx'
+            }
+        }
+
+        stage('Smoke Test (Verify Live App)') {
+            steps {
+                echo 'Verifying live application health...'
+                bat 'powershell -Command "Start-Sleep -Seconds 5; curl -f http://localhost/api/health"'
             }
         }
     }
@@ -53,10 +68,38 @@ pipeline {
             echo 'Cleaning up and completing pipeline execution.'
         }
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Pipeline completed and deployed successfully!'
+            script {
+                try {
+                    mail to: "${NOTIFY_EMAIL}",
+                         subject: "SUCCESS: Jenkins Build #${env.BUILD_NUMBER} - ${env.JOB_NAME}",
+                         body: """Great news!
+
+Jenkins Build #${env.BUILD_NUMBER} has successfully passed all tests and deployed the updated containers.
+Application URL: http://localhost
+Build Details: ${env.BUILD_URL}
+"""
+                } catch (Exception e) {
+                    echo "Notice: Could not send email (check Jenkins SMTP settings): ${e.message}"
+                }
+            }
         }
         failure {
             echo 'Pipeline failed. Please inspect the stage logs above.'
+            script {
+                try {
+                    mail to: "${NOTIFY_EMAIL}",
+                         subject: "FAILURE: Jenkins Build #${env.BUILD_NUMBER} - ${env.JOB_NAME}",
+                         body: """Attention!
+
+Jenkins Build #${env.BUILD_NUMBER} failed during execution.
+Please check the console logs to inspect the failure:
+Build Console: ${env.BUILD_URL}console
+"""
+                } catch (Exception e) {
+                    echo "Notice: Could not send email (check Jenkins SMTP settings): ${e.message}"
+                }
+            }
         }
     }
 }
