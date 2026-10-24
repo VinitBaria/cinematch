@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+/* ───────────────────────── Design tokens & motion ───────────────────────── */
+@theme {
+  --color-nf-red: #e50914;
+  --color-nf-red-dark: #b20710;
+  --color-nf-bg: #141414;
+  --color-nf-surface: #181818;
+  --color-nf-card: #1f1f1f;
+
+  --font-display: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --animate-fade-in: fade-in 0.5s ease-out both;
+  --animate-fade-up: fade-up 0.7s var(--ease-out-expo) both;
+  --animate-fade-down: fade-down 0.25s var(--ease-out-expo) both;
+  --animate-scale-in: scale-in 0.35s var(--ease-out-expo) both;
+  --animate-modal-in: modal-in 0.45s var(--ease-out-expo) both;
+  --animate-modal-out: modal-out 0.22s ease-in both;
+  --animate-overlay-in: fade-in 0.3s ease-out both;
+  --animate-overlay-out: fade-out 0.22s ease-in both;
+  --animate-slide-up: slide-up 0.5s var(--ease-out-expo) both;
+  --animate-shimmer: shimmer 1.8s linear infinite;
+  --animate-kenburns: kenburns 14s ease-out both;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pop: pop 0.4s var(--ease-spring);
+  --animate-glow: glow 2.4s ease-in-out infinite;
+  --animate-wall-up: wall-up 70s linear infinite;
+  --animate-wall-down: wall-down 70s linear infinite;
+  --animate-progress: progress linear both;
+
+  @keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes fade-out { from { opacity: 1 } to { opacity: 0 } }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(28px) }
+    to { opacity: 1; transform: translateY(0) }
+  }
+  @keyframes fade-down {
+    from { opacity: 0; transform: translateY(-8px) scale(0.98) }
+    to { opacity: 1; transform: translateY(0) scale(1) }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.94) }
+    to { opacity: 1; transform: scale(1) }
+  }
+  @keyframes modal-in {
+    from { opacity: 0; transform: translateY(40px) scale(0.96) }
+    to { opacity: 1; transform: translateY(0) scale(1) }
+  }
+  @keyframes modal-out {
+    from { opacity: 1; transform: translateY(0) scale(1) }
+    to { opacity: 0; transform: translateY(24px) scale(0.97) }
+  }
+  @keyframes slide-up {
+    from { transform: translateY(110%); opacity: 0 }
+    to { transform: translateY(0); opacity: 1 }
+  }
+  @keyframes shimmer {
+    from { background-position: -200% 0 }
+    to { background-position: 200% 0 }
+  }
+  @keyframes kenburns {
+    from { transform: scale(1.08) translate3d(0, 0, 0) }
+    to { transform: scale(1.22) translate3d(-1.5%, -1%, 0) }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(-1.5deg) }
+    50% { transform: translateY(-14px) rotate(1deg) }
+  }
+  @keyframes pop {
+    0% { transform: scale(1) }
+    45% { transform: scale(1.5) }
+    100% { transform: scale(1) }
+  }
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0.55) }
+    50% { box-shadow: 0 0 0 12px rgba(229, 9, 20, 0) }
+  }
+  @keyframes wall-up {
+    from { transform: translateY(0) }
+    to { transform: translateY(-50%) }
+  }
+  @keyframes wall-down {
+    from { transform: translateY(-50%) }
+    to { transform: translateY(0) }
+  }
+  @keyframes progress {
+    from { transform: scaleX(0) }
+    to { transform: scaleX(1) }
+  }
+}
+
+@layer base {
+  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+  body {
+    background-color: #141414;
+    color: #e5e5e5;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow-x: hidden;
+  }
+  :focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+}
+
+/* ───────────────────────── Scrollbars ───────────────────────── */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #141414; }
+::-webkit-scrollbar-thumb { background: #2f2f2f; border-radius: 6px; border: 2px solid #141414; }
+::-webkit-scrollbar-thumb:hover { background: #e50914; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ───────────────────────── Utilities ───────────────────────── */
+.skeleton {
+  background: linear-gradient(100deg, #1c1c1c 30%, #2a2a2a 50%, #1c1c1c 70%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+/* Scroll-reveal (toggled by <Reveal />) */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
+  will-change: opacity, transform;
+}
+.reveal.in-view { opacity: 1; transform: none; }
+
+/* Outlined numerals for "Top 10" rows */
+.rank-number {
+  font-family: var(--font-display);
+  -webkit-text-stroke: 3px #595959;
+  color: #141414;
+  line-height: 0.8;
+  text-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+  transition: -webkit-text-stroke-color 0.3s, color 0.3s;
+}
+.group:hover .rank-number { -webkit-text-stroke-color: #e50914; }
+
+.text-gradient-red {
+  background: linear-gradient(90deg, #ff4b55, #e50914 55%, #ff8a4b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glass {
+  background: rgba(24, 24, 24, 0.72);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Film grain overlay for auth screens */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}

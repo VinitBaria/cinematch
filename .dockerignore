@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.cache/
+
+# Local Nginx for Windows binaries
+nginx/
+nginx-1.30.6/
+*.log
+*.pid
+
+# Temporary & Environment
+.env.local
+.DS_Store
+Thumbs.db

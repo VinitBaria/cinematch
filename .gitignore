@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+venv/
+env/
+.venv/
+
+# ML Artifacts
+ml/artifacts/*.pkl
+ml/artifacts/*.joblib
+ml/artifacts/*.json
+ml/artifacts/*.csv
+
+# Data
+data/raw/
+data/processed/
+*.zip
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# MongoDB
+dump/
+
+# MLflow and Nginx
+mlruns/
+nginx-1.30.6/

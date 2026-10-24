@@ -1,0 +1,23 @@
+# ML Dependencies for CineMatch AI
+# Compatible with Python 3.13+
+
+# Core
+numpy>=2.0.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+scipy>=1.11.0
+
+# Surprise (collaborative filtering)
+scikit-surprise>=1.1.4
+
+# Model persistence
+joblib>=1.3.0
+
+# Utilities
+requests>=2.31.0
+tqdm>=4.65.0
+python-dotenv>=1.0.0
+
+# Experiment Tracking & MLOps
+mlflow>=2.10.0
+
