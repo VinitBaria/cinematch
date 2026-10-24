@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { name: 'AI Picks', path: '/recommendations' },
   { name: 'Browse', path: '/search' },
   { name: 'My Ratings', path: '/ratings' },
+  { name: 'Admin Studio', path: '/admin' },
 ];
 
 export const Navbar: React.FC = () => {

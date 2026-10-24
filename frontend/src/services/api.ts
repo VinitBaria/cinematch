@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {
   Movie,
+  MovieCreateInput,
   MovieListResponse,
   Rating,
   RecommendationResponse,
@@ -165,6 +166,22 @@ export const api = {
 
   async getModelInfo(): Promise<ModelInfo> {
     const { data } = await apiClient.get<ModelInfo>('/model/info');
+    return data;
+  },
+
+  // ── Admin Movie Management ──
+  async createMovie(movie: MovieCreateInput): Promise<Movie> {
+    const { data } = await apiClient.post<Movie>('/movies', movie);
+    return data;
+  },
+
+  async deleteMovie(movieId: number): Promise<{ message: string; deleted: boolean }> {
+    const { data } = await apiClient.delete(`/movies/${movieId}`);
+    return data;
+  },
+
+  async getRecentCustomMovies(): Promise<Movie[]> {
+    const { data } = await apiClient.get<Movie[]>('/movies/custom/recent');
     return data;
   },
 };

@@ -4,12 +4,25 @@ export interface Movie {
   cleanTitle?: string;
   year?: number;
   genres: string[];
+  industry?: string;
+  isCustom?: boolean;
   posterUrl?: string;
   overview?: string;
   tmdbId?: number;
   avgRating?: number;
   ratingCount?: number;
   userRating?: number;
+}
+
+export interface MovieCreateInput {
+  title: string;
+  year: number;
+  genres: string[];
+  industry: 'Bollywood' | 'Hollywood' | string;
+  overview?: string;
+  posterUrl?: string;
+  avgRating?: number;
+  ratingCount?: number;
 }
 
 export interface MovieListResponse {

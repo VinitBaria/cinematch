@@ -37,12 +37,23 @@ class MovieResponse(BaseModel):
     cleanTitle: Optional[str] = None
     year: Optional[float] = None
     genres: Optional[List[str]] = []
+    industry: Optional[str] = None
     posterUrl: Optional[str] = None
     overview: Optional[str] = None
     tmdbId: Optional[float] = None
     avgRating: Optional[float] = None
     ratingCount: Optional[int] = 0
     userRating: Optional[float] = None
+
+class MovieCreateRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    year: int = Field(default=2024, ge=1900, le=2035)
+    genres: List[str] = Field(default_factory=list)
+    industry: str = Field(default="Bollywood")
+    overview: Optional[str] = None
+    posterUrl: Optional[str] = None
+    avgRating: Optional[float] = Field(default=4.5, ge=0.5, le=5.0)
+    ratingCount: Optional[int] = Field(default=10, ge=0)
 
 class MovieListResponse(BaseModel):
     movies: List[MovieResponse]
