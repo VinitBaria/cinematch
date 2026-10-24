@@ -10,6 +10,10 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime, timezone
+
+# Fix Windows console encoding
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 import pandas as pd
 from pymongo import MongoClient, UpdateOne
 
