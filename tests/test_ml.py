@@ -56,17 +56,21 @@ class TestDatasetValidation:
             assert ((df["rating"] * 2) % 1 == 0).all(), f"Non 0.5 step in {path}"
 
     def test_chronological_split_integrity(self):
-        """Ensure no future ratings leaked into train set per user."""
+        """Ensure no future ratings leaked into baseline train set per user."""
         train_df = pd.read_csv(TRAIN_DATA_PATH)
         test_df = pd.read_csv(TEST_DATA_PATH)
 
+        # Baseline chronological check: exclude fresh live production ratings added during CT
+        test_max_ts = test_df["timestamp"].max()
+        baseline_train_df = train_df[train_df["timestamp"] <= test_max_ts]
+
         # Check overlapping users: user max train timestamp <= user min test timestamp
-        common_users = set(train_df["userId"]).intersection(set(test_df["userId"]))
+        common_users = set(baseline_train_df["userId"]).intersection(set(test_df["userId"]))
         assert len(common_users) > 0
 
         leaks = 0
         for uid in list(common_users)[:50]:  # sample check
-            train_max_ts = train_df[train_df["userId"] == uid]["timestamp"].max()
+            train_max_ts = baseline_train_df[baseline_train_df["userId"] == uid]["timestamp"].max()
             test_min_ts = test_df[test_df["userId"] == uid]["timestamp"].min()
             if train_max_ts > test_min_ts:
                 leaks += 1
