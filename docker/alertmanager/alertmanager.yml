@@ -1,0 +1,62 @@
+global:
+  resolve_timeout: 1m
+  smtp_smarthost: "smtp.gmail.com:587"
+  smtp_from: "vinitbaria2006@gmail.com"
+  smtp_auth_username: "vinitbaria2006@gmail.com"
+  smtp_auth_password: "tjvgnaaipbyusfrn"
+  smtp_require_tls: true
+
+route:
+  receiver: "admin-notifications"
+  group_by: ["alertname", "severity", "project"]
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 4h
+
+receivers:
+  - name: "admin-notifications"
+    email_configs:
+      - to: "vinitbaria2006@gmail.com"
+        send_resolved: true
+        headers:
+          Subject: "[{{ .Status | toUpper }}] CineMatch AI Alert: {{ .CommonAnnotations.summary }}"
+        html: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f7f9fa; color: #1a202c; padding: 20px; }
+              .card { background: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 24px; max-width: 600px; margin: 0 auto; border-top: 5px solid {{ if eq .Status "firing" }}#e53e3e{{ else }}#38a169{{ end }}; }
+              .header { font-size: 20px; font-weight: bold; margin-bottom: 12px; color: {{ if eq .Status "firing" }}#e53e3e{{ else }}#38a169{{ end }}; }
+              .alert-box { background: #edf2f7; border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+              .label { font-weight: 600; color: #4a5568; }
+              .footer { margin-top: 20px; font-size: 12px; color: #a0aec0; text-align: center; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <div class="header">
+                {{ if eq .Status "firing" }}🚨 ALERT FIRING{{ else }}✅ ALERT RESOLVED{{ end }}: CineMatch AI
+              </div>
+              <p>Prometheus has detected an event requiring attention on the CineMatch AI platform:</p>
+              
+              {{ range .Alerts }}
+              <div class="alert-box">
+                <p><span class="label">Alert:</span> {{ .Labels.alertname }}</p>
+                <p><span class="label">Severity:</span> {{ .Labels.severity }}</p>
+                <p><span class="label">Summary:</span> {{ .Annotations.summary }}</p>
+                <p><span class="label">Description:</span> {{ .Annotations.description }}</p>
+                <p><span class="label">Started:</span> {{ .StartsAt }}</p>
+              </div>
+              {{ end }}
+
+              <div class="footer">
+                CineMatch AI MLOps Platform • Prometheus & Alertmanager
+              </div>
+            </div>
+          </body>
+          </html>
+
+    webhook_configs:
+      - url: "http://backend:8000/api/model/retrain"
+        send_resolved: false

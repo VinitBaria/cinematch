@@ -53,9 +53,11 @@ def inject_drift(count: int = 100, drift_type: str = "low"):
     else:
         valid_movie_ids = list(range(1, 101))
 
-    # Generate new unseen users (starting from 9001 to ensure they are NOT in trained model)
-    num_users = max(20, count // 2)
-    drift_users = [9000 + i for i in range(1, num_users + 1)]
+    # Generate new unseen users (strictly higher than any existing user)
+    num_users = max(30, count // 2)
+    max_existing = max(db.ratings.distinct("userId") or [9000])
+    base_user = max(max_existing + 10, 10000)
+    drift_users = [base_user + i for i in range(1, num_users + 1)]
 
     injected_docs = []
     used_pairs = set()

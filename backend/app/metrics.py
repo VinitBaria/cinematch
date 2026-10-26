@@ -197,18 +197,27 @@ def sync_drift_from_disk():
 
 def sync_drift_live():
     """
-    Computes real-time data drift metrics dynamically from MongoDB.
+    Computes real-time data drift metrics dynamically from MongoDB or disk report.
     Compares live production ratings directly against active model metadata.
     """
     global _last_disk_sync
     now = time.time()
-    if now - _last_disk_sync < 4.0:
+    if now - _last_disk_sync < 3.0:
         return
     _last_disk_sync = now
 
+    # Priority 1: If an official drift report was generated, sync from it
+    from .config import ARTIFACTS_DIR
+    report_file = ARTIFACTS_DIR / "drift_report.json"
+    if report_file.exists():
+        try:
+            sync_drift_from_disk()
+            return
+        except Exception:
+            pass
+
     try:
         from .database import get_db
-        from .config import ARTIFACTS_DIR
         import json
 
         # 1. Load active model metadata (baseline & known users)
@@ -219,7 +228,8 @@ def sync_drift_live():
         if meta_file.exists():
             with open(meta_file, "r", encoding="utf-8") as f:
                 meta = json.load(f)
-                baseline_mean = float(meta.get("trainset_stats", {}).get("mean_rating", 3.52))
+                train_stats = meta.get("trainset_stats", {})
+                baseline_mean = float(train_stats.get("global_mean") or train_stats.get("mean_rating") or 3.52)
                 known_users = set(meta.get("known_user_ids", []))
                 model_ver = meta.get("model_version", "unknown")
 
@@ -236,12 +246,8 @@ def sync_drift_live():
             else:
                 unseen_pct = 0.0
 
-            # If all live users are already calibrated into the trained model:
-            if unseen_pct == 0.0:
-                drift_detected = False
-            else:
-                mean_shift = abs(mean_prod - baseline_mean)
-                drift_detected = bool(mean_shift >= 0.50 or unseen_pct >= 25.0)
+            mean_shift = abs(mean_prod - baseline_mean)
+            drift_detected = bool(mean_shift >= 0.50 or unseen_pct >= 25.0)
 
             # Update Gauges dynamically
             DATA_DRIFT_DETECTED.set(1 if drift_detected else 0)
@@ -254,7 +260,6 @@ def sync_drift_live():
     except Exception:
         pass
 
-    # Fallback to disk report if available
     sync_drift_from_disk()
 
 

@@ -193,9 +193,10 @@ class TestDriftDetection:
         from ml.drift_detector import run_drift_analysis
         report = run_drift_analysis(simulate=True, save_report=False)
         assert "drift_detected" in report
+        assert "recommend_retraining" in report
+        assert "primary_reasons" in report
         assert "statistics" in report
         assert "ks_p_value" in report["statistics"]
         assert "psi_score" in report["statistics"]
-        assert DRIFT_STATUS_FILE.exists()
-        assert DRIFT_REPORT_FILE.exists()
+        assert "thresholds" in report
 

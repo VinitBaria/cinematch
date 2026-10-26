@@ -1,0 +1,122 @@
+groups:
+  # ──────────────────────────────────────────────
+  # 1. Recording Rules (Precomputed Aggregations)
+  # ──────────────────────────────────────────────
+  - name: cinematch_recording_rules
+    interval: 10s
+    rules:
+      - record: cinematch:http_requests:rate5m
+        expr: sum(rate(cinematch_http_requests_total[5m]))
+
+      - record: cinematch:http_errors:rate5m
+        expr: sum(rate(cinematch_http_requests_total{status=~"5.."}[5m]))
+
+      - record: cinematch:model_inference:p95_seconds
+        expr: histogram_quantile(0.95, sum(rate(cinematch_model_inference_seconds_bucket[5m])) by (le))
+
+  # ──────────────────────────────────────────────
+  # 2. ML Quality & Data Drift Alerting Rules
+  # ──────────────────────────────────────────────
+  - name: cinematch_ml_drift_alerts
+    rules:
+      - alert: CineMatchDataDriftDetected
+        expr: cinematch_data_drift_detected == 1
+        for: 15s
+        labels:
+          severity: critical
+          component: ml-engine
+          project: cinematch-ai
+        annotations:
+          summary: "CineMatch AI Data Drift Detected"
+          description: "Live rating distribution has significantly diverged from the baseline training set. Automated retraining should be triggered."
+
+      - alert: CineMatchRetrainThresholdReached
+        expr: sum(cinematch_ratings_submitted_total) >= 500
+        for: 1m
+        labels:
+          severity: warning
+          component: ml-engine
+          project: cinematch-ai
+        annotations:
+          summary: "Model Retraining Data Threshold Reached (500+ ratings)"
+          description: "Over 500 fresh ratings have been collected in production. Automated model retraining should be initiated."
+
+      - alert: CineMatchHighPSIScore
+        expr: cinematch_drift_psi_score > 0.20
+        for: 1m
+        labels:
+          severity: warning
+          component: ml-engine
+          project: cinematch-ai
+        annotations:
+          summary: "High Population Stability Index (PSI > 0.20)"
+          description: "PSI score is {{ $value }}, indicating significant population distribution shift."
+
+      - alert: CineMatchHighUnseenUsersRatio
+        expr: cinematch_drift_unseen_users_pct > 25
+        for: 2m
+        labels:
+          severity: warning
+          component: ml-engine
+          project: cinematch-ai
+        annotations:
+          summary: "High Proportion of Unseen Users ({{ $value }}%)"
+          description: "More than 25% of active users are not present in the SVD collaborative matrix, degrading recommendation quality."
+
+      - alert: CineMatchKSTestDrift
+        expr: cinematch_drift_ks_p_value < 0.05 and cinematch_drift_ks_p_value > 0
+        for: 1m
+        labels:
+          severity: warning
+          component: ml-engine
+          project: cinematch-ai
+        annotations:
+          summary: "Kolmogorov-Smirnov Test p-value < 0.05"
+          description: "KS test p-value is {{ $value }}, demonstrating statistically significant rating divergence."
+
+      - alert: CineMatchHighInferenceLatency
+        expr: histogram_quantile(0.95, sum(rate(cinematch_model_inference_seconds_bucket[5m])) by (le)) > 0.2
+        for: 1m
+        labels:
+          severity: warning
+          component: ml-engine
+          project: cinematch-ai
+        annotations:
+          summary: "Slow ML Model Inference (p95 > 200ms)"
+          description: "95th percentile recommendation generation latency is {{ $value }}s."
+
+  # ──────────────────────────────────────────────
+  # 3. System & API Health Alerting Rules
+  # ──────────────────────────────────────────────
+  - name: cinematch_system_alerts
+    rules:
+      - alert: CineMatchBackendDown
+        expr: up{job="cinematch_backend"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          component: backend
+          project: cinematch-ai
+        annotations:
+          summary: "FastAPI Backend Service Down"
+          description: "The CineMatch FastAPI backend has been unreachable for more than 30 seconds."
+
+      - alert: CineMatchServerCrashError
+        expr: sum(increase(cinematch_http_requests_total{status=~"5.."}[1m])) > 0
+        labels:
+          severity: critical
+          component: backend
+          project: cinematch-ai
+        annotations:
+          summary: "API Server Crash (5xx Error Detected)"
+          description: "Internal server error (HTTP 500/5xx) detected in the last minute."
+
+      - alert: CineMatchRecommendationEngineFailure
+        expr: sum(increase(cinematch_recommendation_requests_total{status="error"}[1m])) > 0
+        labels:
+          severity: critical
+          component: ml-engine
+          project: cinematch-ai
+        annotations:
+          summary: "Recommendation Engine Failure"
+          description: "One or more recommendation generation requests returned an error status."

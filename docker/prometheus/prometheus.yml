@@ -2,6 +2,14 @@ global:
   scrape_interval: 5s
   evaluation_interval: 5s
 
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+rule_files:
+  - "/etc/prometheus/alert.rules.yml"
+
 scrape_configs:
   - job_name: "cinematch_backend"
     metrics_path: "/metrics"

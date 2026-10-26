@@ -41,7 +41,9 @@ services:
       mongodb:
         condition: service_healthy
     volumes:
-      - ./ml/artifacts:/app/ml/artifacts
+      - ./backend:/app/backend
+      - ./scripts:/app/scripts
+      - ./ml:/app/ml
       - ./data:/app/data
     networks:
       - cinematch-network
@@ -82,7 +84,23 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
       - prometheus_data:/prometheus
+    depends_on:
+      - alertmanager
+    networks:
+      - cinematch-network
+
+  # ── 5.1 Alertmanager Notification Engine ──
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: cinematch_alertmanager
+    restart: unless-stopped
+    ports:
+      - "9095:9093"
+    volumes:
+      - ./docker/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
     networks:
       - cinematch-network
 
@@ -114,6 +132,8 @@ volumes:
     name: cinematch_mongo_data
   prometheus_data:
     name: cinematch_prometheus_data
+  alertmanager_data:
+    name: cinematch_alertmanager_data
   grafana_data:
     name: cinematch_grafana_data
 

@@ -195,7 +195,17 @@ def trigger_drift_check(simulate: bool = False):
 
 
 def _run_background_retrain():
-    """Background task to execute check_drift_and_retrain pipeline."""
+    """Background task to trigger Jenkins pipeline or execute check_drift_and_retrain directly."""
+    try:
+        from scripts.trigger_jenkins import trigger_jenkins_pipeline
+        jenkins_triggered = trigger_jenkins_pipeline()
+        if jenkins_triggered:
+            print("🚀 Jenkins continuous delivery pipeline triggered successfully!")
+            return
+    except Exception as e:
+        print(f"[WARN] Jenkins trigger check: {e}")
+
+    # Fallback: Retrain directly if Jenkins remote trigger is not enabled
     script_path = Path(__file__).resolve().parent.parent.parent / "scripts" / "check_drift_and_retrain.py"
     subprocess.run([sys.executable, str(script_path), "--force-retrain"])
 
