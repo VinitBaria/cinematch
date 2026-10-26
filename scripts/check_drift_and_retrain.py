@@ -133,7 +133,18 @@ def main():
 
     if success:
         print("\n🎉 Model retraining and MLflow registration completed successfully!")
-        # Re-check drift to log baseline update
+        # Complete simulation test cycle by cleaning up injected simulation records from MongoDB
+        try:
+            from backend.app.database import connect_db, get_db
+            connect_db()
+            db = get_db()
+            sim_deleted = db.ratings.delete_many({"is_drift_simulation": True})
+            if sim_deleted.deleted_count > 0:
+                print(f"🧹 Cleaned up {sim_deleted.deleted_count} simulated drift ratings from MongoDB.")
+        except Exception as e:
+            print(f"[NOTE] Post-retrain simulation cleanup: {e}")
+
+        # Re-check drift to log baseline update and restore healthy status
         print("🔄 Updating post-retrain drift status in Prometheus...")
         run_drift_analysis(simulate=False)
         sys.exit(0)
