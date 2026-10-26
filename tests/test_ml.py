@@ -190,8 +190,8 @@ class TestDriftDetection:
         assert psi > 0.20, f"PSI for heavily shifted data should be > 0.20, got {psi}"
 
     def test_drift_analysis_generates_valid_report(self):
-        from ml.drift_detector import run_drift_analysis, DRIFT_STATUS_FILE, DRIFT_REPORT_FILE
-        report = run_drift_analysis(simulate=True)
+        from ml.drift_detector import run_drift_analysis
+        report = run_drift_analysis(simulate=True, save_report=False)
         assert "drift_detected" in report
         assert "statistics" in report
         assert "ks_p_value" in report["statistics"]

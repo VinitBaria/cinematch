@@ -115,7 +115,7 @@ def generate_simulated_drift_ratings(baseline_df: pd.DataFrame, n_samples: int =
     })
 
 
-def run_drift_analysis(simulate: bool = False, min_samples: int = 30) -> dict:
+def run_drift_analysis(simulate: bool = False, min_samples: int = 30, save_report: bool = True) -> dict:
     """
     Execute full statistical drift analysis comparing baseline against production.
     """
@@ -262,30 +262,31 @@ def run_drift_analysis(simulate: bool = False, min_samples: int = 30) -> dict:
     print(f"  Primary Reason:       {', '.join(primary_reasons)}")
     print("------------------------------------\n")
 
-    # 8. Save Status & Report to Disk
-    with open(DRIFT_STATUS_FILE, "w") as f:
-        json.dump({
-            "drift_detected": drift_detected,
-            "timestamp": report["timestamp"],
-            "model_version": model_version,
-            "ks_p_value": report["statistics"]["ks_p_value"],
-            "psi_score": report["statistics"]["psi_score"],
-            "unseen_users_pct": unseen_users_pct,
-            "baseline_mean": round(baseline_mean, 3),
-            "production_mean": round(prod_mean, 3),
-        }, f, indent=2)
+    # 8. Save Status & Report to Disk (only when save_report=True)
+    if save_report:
+        with open(DRIFT_STATUS_FILE, "w") as f:
+            json.dump({
+                "drift_detected": drift_detected,
+                "timestamp": report["timestamp"],
+                "model_version": model_version,
+                "ks_p_value": report["statistics"]["ks_p_value"],
+                "psi_score": report["statistics"]["psi_score"],
+                "unseen_users_pct": unseen_users_pct,
+                "baseline_mean": round(baseline_mean, 3),
+                "production_mean": round(prod_mean, 3),
+            }, f, indent=2)
 
-    with open(DRIFT_REPORT_FILE, "w") as f:
-        json.dump(report, f, indent=2)
+        with open(DRIFT_REPORT_FILE, "w") as f:
+            json.dump(report, f, indent=2)
 
-    print(f"💾 Saved status: {DRIFT_STATUS_FILE}")
-    print(f"💾 Saved report: {DRIFT_REPORT_FILE}")
+        print(f"💾 Saved status: {DRIFT_STATUS_FILE}")
+        print(f"💾 Saved report: {DRIFT_REPORT_FILE}")
 
-    # 9. Log Run to MLflow
-    log_drift_to_mlflow(report)
+        # 9. Log Run to MLflow
+        log_drift_to_mlflow(report)
 
-    # 10. Update Prometheus Metrics
-    update_local_prometheus(report)
+        # 10. Update Prometheus Metrics
+        update_local_prometheus(report)
 
     return report
 
